@@ -635,6 +635,10 @@ namespace Nop.Services.ExportImport
 
                     product = product ?? new Product();
 
+                    //some of previous values
+                    var prevStockQuantity = product.StockQuantity;
+                    var prevWarehouseId = product.WarehouseId;
+
                     if (isNew)
                         product.CreatedOnUtc = DateTime.UtcNow;
 
@@ -931,6 +935,26 @@ namespace Nop.Services.ExportImport
                     else
                     {
                         _productService.UpdateProduct(product);
+                    }
+
+                    //quantity change history
+                    if (isNew)
+                    {
+                        _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity, product.WarehouseId,
+                            _localizationService.GetResource("Admin.StockQuantityHistory.Messages.ImportProduct.New"));
+                    }
+                    else
+                    {
+                        if (prevWarehouseId != product.WarehouseId)
+                        {
+                            _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity, product.WarehouseId,
+                                string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.ImportProduct.NewWarehouse"), prevWarehouseId));
+                            _productService.AddStockQuantityHistoryEntry(product, -prevStockQuantity, prevWarehouseId,
+                                string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.ImportProduct.OldWarehouse"), product.WarehouseId));
+                        }
+                        else
+                            _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity - prevStockQuantity, product.WarehouseId,
+                                _localizationService.GetResource("Admin.StockQuantityHistory.Messages.ImportProduct.Edit"));
                     }
 
                     tempProperty = manager.GetProperty("SeName");

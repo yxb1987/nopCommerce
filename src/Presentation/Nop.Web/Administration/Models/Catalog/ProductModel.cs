@@ -947,6 +947,31 @@ namespace Nop.Admin.Models.Catalog
 
         }
 
+        #region Stock quantity history
+
+        public partial class StockQuantityHistoryModel : BaseNopEntityModel
+        {
+            [NopResourceDisplayName("Admin.Catalog.Products.StockQuantityHistory.Fields.Warehouse")]
+            [AllowHtml]
+            public string WarehouseName { get; set; }
+
+            [NopResourceDisplayName("Admin.Catalog.Products.StockQuantityHistory.Fields.Combination")]
+            public int? CombinationId { get; set; }
+
+            [NopResourceDisplayName("Admin.Catalog.Products.StockQuantityHistory.Fields.QuantityAdjustment")]
+            public int QuantityAdjustment { get; set; }
+
+            [NopResourceDisplayName("Admin.Catalog.Products.StockQuantityHistory.Fields.Message")]
+            [AllowHtml]
+            public string Message { get; set; }
+
+            [NopResourceDisplayName("Admin.Catalog.Products.StockQuantityHistory.Fields.CreatedOn")]
+            [UIHint("DecimalNullable")]
+            public DateTime CreatedOn { get; set; }
+        }
+
+        #endregion
+
         #endregion
     }
 

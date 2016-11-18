@@ -851,15 +851,25 @@ namespace Nop.Admin.Controllers
                 {
                     if (used)
                     {
+                        var prevStockQuantity = existingPwI.StockQuantity;
+
                         //update existing record
                         existingPwI.StockQuantity = stockQuantity;
                         existingPwI.ReservedQuantity = reservedQuantity;
                         _productService.UpdateProduct(product);
+
+                        //quantity change history
+                        _productService.AddStockQuantityHistoryEntry(product, existingPwI.StockQuantity - prevStockQuantity, existingPwI.WarehouseId,
+                            _localizationService.GetResource("Admin.StockQuantityHistory.Messages.Edit"));
                     }
                     else
                     {
                         //delete. no need to store record for qty 0
                         _productService.DeleteProductWarehouseInventory(existingPwI);
+
+                        //quantity change history
+                        _productService.AddStockQuantityHistoryEntry(product, -existingPwI.StockQuantity, existingPwI.WarehouseId,
+                            _localizationService.GetResource("Admin.StockQuantityHistory.Messages.DeleteWarehouse"));
                     }
                 }
                 else
@@ -876,6 +886,10 @@ namespace Nop.Admin.Controllers
                         };
                         product.ProductWarehouseInventory.Add(existingPwI);
                         _productService.UpdateProduct(product);
+
+                        //quantity change history
+                        _productService.AddStockQuantityHistoryEntry(product, existingPwI.StockQuantity, existingPwI.WarehouseId,
+                            _localizationService.GetResource("Admin.StockQuantityHistory.Messages.New"));
                     }
                 }
             }
@@ -1114,6 +1128,13 @@ namespace Nop.Admin.Controllers
                 //warehouses
                 SaveProductWarehouseInventory(product, model);
 
+                //quantity change history
+                if (!product.UseMultipleWarehouses)
+                {
+                    _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity, product.WarehouseId,
+                        _localizationService.GetResource("Admin.StockQuantityHistory.Messages.New"));
+                }
+
                 //activity log
                 _customerActivityService.InsertActivity("AddNewProduct", _localizationService.GetResource("ActivityLog.AddNewProduct"), product.Name);
 
@@ -1218,9 +1239,11 @@ namespace Nop.Admin.Controllers
                     model.ShowOnHomePage = product.ShowOnHomePage;
                 }
                 //some previously used values
-                var prevStockQuantity = product.GetTotalStockQuantity();
+                var prevTotalStockQuantity = product.GetTotalStockQuantity();
                 int prevDownloadId = product.DownloadId;
                 int prevSampleDownloadId = product.SampleDownloadId;
+                int prevStockQuantity= product.StockQuantity;
+                int prevWarehouseId = product.WarehouseId;
 
                 //product
                 product = model.ToEntity(product);
@@ -1254,7 +1277,7 @@ namespace Nop.Admin.Controllers
                     product.BackorderMode == BackorderMode.NoBackorders &&
                     product.AllowBackInStockSubscriptions &&
                     product.GetTotalStockQuantity() > 0 &&
-                    prevStockQuantity <= 0 &&
+                    prevTotalStockQuantity <= 0 &&
                     product.Published &&
                     !product.Deleted)
                 {
@@ -1273,6 +1296,21 @@ namespace Nop.Admin.Controllers
                     var prevSampleDownload = _downloadService.GetDownloadById(prevSampleDownloadId);
                     if (prevSampleDownload != null)
                         _downloadService.DeleteDownload(prevSampleDownload);
+                }
+
+                //quantity change history
+                if (!product.UseMultipleWarehouses)
+                {
+                    if (prevWarehouseId != product.WarehouseId)
+                    {
+                        _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity, product.WarehouseId,
+                            string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.NewWarehouse"), prevWarehouseId));
+                        _productService.AddStockQuantityHistoryEntry(product, -prevStockQuantity, prevWarehouseId,
+                            string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.OldWarehouse"), product.WarehouseId));
+                    }
+                    else
+                        _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity - prevStockQuantity, product.WarehouseId,
+                            _localizationService.GetResource("Admin.StockQuantityHistory.Messages.Edit"));
                 }
 
                 //activity log
@@ -2948,7 +2986,7 @@ namespace Nop.Admin.Controllers
                         if (_workContext.CurrentVendor != null && product.VendorId != _workContext.CurrentVendor.Id)
                             continue;
 
-                        var prevStockQuantity = product.GetTotalStockQuantity();
+                        var prevTotalStockQuantity = product.GetTotalStockQuantity();
 
                         product.Name = pModel.Name;
                         product.Sku = pModel.Sku;
@@ -2960,15 +2998,23 @@ namespace Nop.Admin.Controllers
                         _productService.UpdateProduct(product);
 
                         //back in stock notifications
+                        var currentStockQuantity = product.GetTotalStockQuantity();
                         if (product.ManageInventoryMethod == ManageInventoryMethod.ManageStock &&
                             product.BackorderMode == BackorderMode.NoBackorders &&
                             product.AllowBackInStockSubscriptions &&
-                            product.GetTotalStockQuantity() > 0 &&
-                            prevStockQuantity <= 0 &&
+                            currentStockQuantity > 0 &&
+                            prevTotalStockQuantity <= 0 &&
                             product.Published &&
                             !product.Deleted)
                         {
                             _backInStockSubscriptionService.SendNotificationsToSubscribers(product);
+                        }
+
+                        //quantity change history
+                        if (!product.UseMultipleWarehouses)
+                        {
+                            _productService.AddStockQuantityHistoryEntry(product, currentStockQuantity - prevTotalStockQuantity, product.WarehouseId,
+                                _localizationService.GetResource("Admin.StockQuantityHistory.Messages.Edit"));
                         }
                     }
                 }
@@ -4351,6 +4397,8 @@ namespace Nop.Admin.Controllers
             if (_workContext.CurrentVendor != null && product.VendorId != _workContext.CurrentVendor.Id)
                 return Content("This is not your product");
 
+            var prevSrockQuantity = combination.StockQuantity;
+
             combination.StockQuantity = model.StockQuantity;
             combination.AllowOutOfStockOrders = model.AllowOutOfStockOrders;
             combination.Sku = model.Sku;
@@ -4359,6 +4407,10 @@ namespace Nop.Admin.Controllers
             combination.OverriddenPrice = model.OverriddenPrice;
             combination.NotifyAdminForQuantityBelow = model.NotifyAdminForQuantityBelow;
             _productAttributeService.UpdateProductAttributeCombination(combination);
+
+            //quantity change history
+            _productService.AddStockQuantityHistoryEntry(product, combination.StockQuantity - prevSrockQuantity, product.WarehouseId,
+                string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.CombinationEdit"), combination.Id), combination.Id);
 
             return new NullJsonResult();
         }
@@ -4588,6 +4640,10 @@ namespace Nop.Admin.Controllers
                 };
                 _productAttributeService.InsertProductAttributeCombination(combination);
 
+                //quantity change history
+                _productService.AddStockQuantityHistoryEntry(product, combination.StockQuantity, product.WarehouseId,
+                    string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.CombinationCreate"), combination.Id), combination.Id);
+
                 ViewBag.RefreshPage = true;
                 return View(model);
             }
@@ -4671,6 +4727,53 @@ namespace Nop.Admin.Controllers
             if (!Url.IsLocalUrl(returnUrl))
                 return RedirectToAction("List");
             return Redirect(returnUrl);
+        }
+
+        #endregion
+
+        #region Stock quantity history
+
+        [HttpPost]
+        public ActionResult StockQuantityHistory(DataSourceRequest command, int productId)
+        {
+            if (!_permissionService.Authorize(StandardPermissionProvider.ManageProducts))
+                return AccessDeniedView();
+
+            var product = _productService.GetProductById(productId);
+            if (product == null)
+                throw new ArgumentException("No product found with the specified id");
+
+            //a vendor should have access only to his products
+            if (_workContext.CurrentVendor != null && product.VendorId != _workContext.CurrentVendor.Id)
+                return Content("This is not your product");
+
+            var stockQuantityHistory = _productService.GetStockQuantityHistory(product, pageIndex: command.Page - 1, pageSize: command.PageSize);
+
+            var gridModel = new DataSourceResult
+            {
+                Data = stockQuantityHistory.Select(historyEntry =>
+                {
+                    var warehouseName = _localizationService.GetResource("Admin.Catalog.Products.Fields.Warehouse.None");
+                    if (historyEntry.WarehouseId.HasValue)
+                    {
+                        var warehouse = _shippingService.GetWarehouseById(historyEntry.WarehouseId.Value);
+                        warehouseName = warehouse != null ? warehouse.Name : "Deleted";
+                    }
+
+                    return new ProductModel.StockQuantityHistoryModel
+                    {
+                        Id = historyEntry.Id,
+                        QuantityAdjustment = historyEntry.QuantityAdjustment,
+                        Message = historyEntry.Message,
+                        CombinationId = historyEntry.CombinationId,
+                        WarehouseName = warehouseName,
+                        CreatedOn = _dateTimeHelper.ConvertToUserTime(historyEntry.CreatedOnUtc, DateTimeKind.Utc)
+                    };
+                }),
+                Total = stockQuantityHistory.TotalCount
+            };
+
+            return Json(gridModel);
         }
 
         #endregion

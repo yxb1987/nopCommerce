@@ -1,0 +1,80 @@
+﻿@model ProductModel
+
+@{
+    var defaultGridPageSize = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().DefaultGridPageSize;
+    var gridPageSizes = EngineContext.Current.Resolve<Nop.Core.Domain.Common.AdminAreaSettings>().GridPageSizes;
+}
+
+<div class="panel-group">
+    <p>
+        @T("Admin.Catalog.Products.StockQuantityHistory.Hint")
+    </p>
+
+    <div class="panel panel-default">
+        <div class="panel-body">
+            <div id="stock-quantity-history-grid"></div>
+
+            <script>
+                $(document).ready(function() {
+                    $("#stock-quantity-history-grid").kendoGrid({
+                        dataSource: {
+                            type: "json",
+                            transport: {
+                                read: {
+                                    url: "@Html.Raw(Url.Action("StockQuantityHistory", "Product", new {productId = Model.Id}))",
+                                    type: "POST",
+                                    dataType: "json",
+                                    data: addAntiForgeryToken
+                                }
+                            },
+                            schema: {
+                                data: "Data",
+                                total: "Total",
+                                errors: "Errors"
+                            },
+                            error: function(e) {
+                                display_kendoui_grid_error(e);
+                                // Cancel the changes
+                                this.cancelChanges();
+                            },
+                            pageSize: @(defaultGridPageSize),
+                            serverPaging: true,
+                            serverFiltering: true,
+                            serverSorting: true
+                        },
+                        pageable: {
+                            refresh: true,
+                            pageSizes: [@(gridPageSizes)]
+                        },
+                        scrollable: false,
+                        columns: [
+                            {
+                                field: "WarehouseName",
+                                title: "@T("Admin.Catalog.Products.StockQuantityHistory.Fields.Warehouse")",
+                                width: 250
+                            }, {
+                                field: "CombinationId",
+                                title: "@T("Admin.Catalog.Products.StockQuantityHistory.Fields.Combination")",
+                                width: 150
+                            }, {
+                                field: "QuantityAdjustment",
+                                title: "@T("Admin.Catalog.Products.StockQuantityHistory.Fields.QuantityAdjustment")",
+                                width: 150,
+                                template: '# if(QuantityAdjustment > 0) { # +#=QuantityAdjustment# # } else { # #=QuantityAdjustment# # } #'
+                            }, {
+                                field: "Message",
+                                title: "@T("Admin.Catalog.Products.StockQuantityHistory.Fields.Message")"
+                            }, {
+                                field: "CreatedOn",
+                                title: "@T("Admin.Catalog.Products.StockQuantityHistory.Fields.CreatedOn")",
+                                type: "date",
+                                format: "{0:G}",
+                                width: 200
+                            }
+                        ]
+                    });
+                });
+            </script>
+        </div>
+    </div>
+</div>
