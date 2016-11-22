@@ -10,6 +10,31 @@
         @T("Admin.Catalog.Products.StockQuantityHistory.Hint")
     </p>
 
+    <div class="panel panel-default panel-search">
+        <div class="panel-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="form-group" @(Model.AvailableWarehouses.SelectionIsNotPossible() ? Html.Raw("style=\"display:none\"") : null)>
+                        <div class="col-md-4">
+                            @Html.NopLabelFor(model => model.StockQuantityHistory.SearchWarehouseId)
+                        </div>
+                        <div class="col-md-8">
+                            @Html.NopDropDownListFor(model => model.StockQuantityHistory.SearchWarehouseId, Model.AvailableWarehouses)
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <div class="col-md-8 col-md-offset-4">
+                            <button type="button" id="search-stock-quantity-history" class="btn btn-primary btn-search">
+                                <i class="fa fa-search"></i>
+                                @T("Admin.Common.Search")
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="panel panel-default">
         <div class="panel-body">
             <div id="stock-quantity-history-grid"></div>
@@ -21,10 +46,10 @@
                             type: "json",
                             transport: {
                                 read: {
-                                    url: "@Html.Raw(Url.Action("StockQuantityHistory", "Product", new {productId = Model.Id}))",
+                                    url: "@Html.Raw(Url.Action("StockQuantityHistory", "Product"))",
                                     type: "POST",
                                     dataType: "json",
-                                    data: addAntiForgeryToken
+                                    data: additionalData
                                 }
                             },
                             schema: {
@@ -74,6 +99,24 @@
                         ]
                     });
                 });
+            </script>
+
+            <script type="text/javascript">
+                $(document).ready(function() {
+                    $('#search-stock-quantity-history').click(function() {
+                        $('#stock-quantity-history-grid').data('kendoGrid').dataSource.page(1);
+                        return false;
+                    });
+                });
+
+                function additionalData() {
+                    var data = {
+                        productId: @Model.Id,
+                        warehouseId: $('#@Html.FieldIdFor(model => model.StockQuantityHistory.SearchWarehouseId)').val()
+                    };
+                    addAntiForgeryToken(data);
+                    return data;
+                }
             </script>
         </div>
     </div>

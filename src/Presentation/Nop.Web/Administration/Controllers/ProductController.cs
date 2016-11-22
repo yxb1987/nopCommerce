@@ -4734,7 +4734,7 @@ namespace Nop.Admin.Controllers
         #region Stock quantity history
 
         [HttpPost]
-        public ActionResult StockQuantityHistory(DataSourceRequest command, int productId)
+        public ActionResult StockQuantityHistory(DataSourceRequest command, int productId, int warehouseId)
         {
             if (!_permissionService.Authorize(StandardPermissionProvider.ManageProducts))
                 return AccessDeniedView();
@@ -4747,7 +4747,7 @@ namespace Nop.Admin.Controllers
             if (_workContext.CurrentVendor != null && product.VendorId != _workContext.CurrentVendor.Id)
                 return Content("This is not your product");
 
-            var stockQuantityHistory = _productService.GetStockQuantityHistory(product, pageIndex: command.Page - 1, pageSize: command.PageSize);
+            var stockQuantityHistory = _productService.GetStockQuantityHistory(product, warehouseId, pageIndex: command.Page - 1, pageSize: command.PageSize);
 
             var gridModel = new DataSourceResult
             {
