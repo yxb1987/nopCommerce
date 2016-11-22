@@ -42,15 +42,5 @@ namespace Nop.Core.Domain.Catalog
         /// Gets the product
         /// </summary>
         public virtual Product Product { get; set; }
-
-        /// <summary>
-        /// Gets the product attribute combination
-        /// </summary>
-        public virtual ProductAttributeCombination Combination { get; set; }
-
-        /// <summary>
-        /// Gets the warehouse
-        /// </summary>
-        public virtual Warehouse Warehouse { get; set; }
     }
 }

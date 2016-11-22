@@ -2556,29 +2556,7 @@ GO
 
 ALTER TABLE [dbo].[StockQuantityHistory] WITH CHECK ADD CONSTRAINT [StockQuantityHistory_Product] FOREIGN KEY([ProductId])
 REFERENCES [dbo].[Product] ([Id])
-GO
-
-IF EXISTS (SELECT 1 FROM sys.objects WHERE name = 'StockQuantityHistory_ProductAttributeCombination' AND parent_object_id = Object_id('StockQuantityHistory') AND Objectproperty(object_id, N'IsForeignKey') = 1)
-BEGIN
-    ALTER TABLE [dbo].StockQuantityHistory
-    DROP CONSTRAINT StockQuantityHistory_ProductAttributeCombination
-END
-GO
-
-ALTER TABLE [dbo].[StockQuantityHistory] WITH CHECK ADD CONSTRAINT [StockQuantityHistory_ProductAttributeCombination] FOREIGN KEY([CombinationId])
-REFERENCES [dbo].[ProductAttributeCombination] ([Id])
-GO
-
-
-IF EXISTS (SELECT 1 FROM sys.objects WHERE name = 'StockQuantityHistory_Warehouse' AND parent_object_id = Object_id('StockQuantityHistory') AND Objectproperty(object_id, N'IsForeignKey') = 1)
-BEGIN
-    ALTER TABLE [dbo].StockQuantityHistory
-    DROP CONSTRAINT StockQuantityHistory_Warehouse
-END
-GO
-
-ALTER TABLE [dbo].[StockQuantityHistory] WITH CHECK ADD CONSTRAINT [StockQuantityHistory_Warehouse] FOREIGN KEY([WarehouseId])
-REFERENCES [dbo].[Warehouse] ([Id])
+ON DELETE CASCADE
 GO
 
 --new setting

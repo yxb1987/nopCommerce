@@ -11,15 +11,8 @@ namespace Nop.Data.Mapping.Catalog
 
             this.HasRequired(historyEntry => historyEntry.Product)
                 .WithMany()
-                .HasForeignKey(historyEntry => historyEntry.ProductId);
-
-            this.HasOptional(historyEntry => historyEntry.Combination)
-                .WithMany()
-                .HasForeignKey(historyEntry => historyEntry.CombinationId);
-
-            this.HasOptional(historyEntry => historyEntry.Warehouse)
-                .WithMany()
-                .HasForeignKey(historyEntry => historyEntry.WarehouseId);
+                .HasForeignKey(historyEntry => historyEntry.ProductId)
+                .WillCascadeOnDelete(true);
         }
     }
 }

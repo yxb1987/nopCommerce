@@ -2094,7 +2094,7 @@ namespace Nop.Services.Catalog
 
             var historyEntry = new StockQuantityHistory
             {
-                Product = product,
+                ProductId = product.Id,
                 CombinationId = combinationId,
                 WarehouseId = warehouseId > 0 ? (int?)warehouseId : null,
                 QuantityAdjustment = quantityAdjustment,
