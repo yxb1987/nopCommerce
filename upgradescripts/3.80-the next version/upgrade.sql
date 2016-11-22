@@ -2559,6 +2559,53 @@ REFERENCES [dbo].[Product] ([Id])
 ON DELETE CASCADE
 GO
 
+--initial stock quantity history
+DECLARE cur_initialhistory CURSOR FOR
+SELECT 
+    Product.Id,
+    CASE WHEN Product.ManageInventoryMethodId <> 2 THEN NULL ELSE ProductAttributeCombination.Id END,
+    CASE WHEN Product.ManageInventoryMethodId <> 2 AND Product.UseMultipleWarehouses = 1 THEN ProductWarehouseInventory.WarehouseId ELSE Product.WarehouseId END,
+    CASE WHEN Product.ManageInventoryMethodId <> 2
+        THEN
+            CASE WHEN Product.UseMultipleWarehouses = 1 THEN ProductWarehouseInventory.StockQuantity ELSE Product.StockQuantity END
+        ELSE ProductAttributeCombination.StockQuantity END
+FROM
+    Product LEFT JOIN
+    ProductWarehouseInventory ON Product.Id = ProductWarehouseInventory.ProductId LEFT JOIN
+    ProductAttributeCombination ON Product.Id = ProductAttributeCombination.ProductId
+
+DECLARE @productId int;
+DECLARE @combinationId int;
+DECLARE @warehouseId int;
+DECLARE @quantity int;
+
+OPEN cur_initialhistory
+FETCH NEXT FROM cur_initialhistory INTO @productId, @combinationId, @warehouseId, @quantity
+
+WHILE @@FETCH_STATUS = 0
+BEGIN
+    IF @warehouseId = 0
+    BEGIN
+        SET @warehouseId = NULL;
+    END
+
+	IF (@quantity IS NOT NULL AND @quantity <> 0 AND 
+        NOT EXISTS (SELECT 1 FROM [StockQuantityHistory] WHERE ProductId = @productId AND 
+            (CombinationId = @combinationId OR (CombinationId IS NULL AND @combinationId IS NULL)) AND (WarehouseId = @warehouseId OR (WarehouseId IS NULL AND @warehouseId IS NULL))))
+	BEGIN
+		INSERT INTO [StockQuantityHistory]
+		    ([ProductId], [CombinationId], [WarehouseId], [QuantityAdjustment], [Message], [CreatedOnUtc])
+		VALUES
+		    (@productId, @combinationId, @warehouseId, @quantity, 'Initialization of history table (original quantity set) during upgrade from a previous version', GETUTCDATE())
+	END
+
+	FETCH NEXT FROM cur_initialhistory INTO @productId, @combinationId, @warehouseId, @quantity
+END
+
+CLOSE cur_initialhistory
+DEALLOCATE cur_initialhistory
+GO
+
 --new setting
 IF NOT EXISTS (SELECT 1 FROM [Setting] WHERE [name] = N'producteditorsettings.stockquantityhistory')
 BEGIN
