@@ -940,20 +940,20 @@ namespace Nop.Services.ExportImport
                     //quantity change history
                     if (isNew)
                     {
-                        _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity, product.WarehouseId,
+                        _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity, product.StockQuantity, product.WarehouseId,
                             _localizationService.GetResource("Admin.StockQuantityHistory.Messages.ImportProduct.New"));
                     }
                     else
                     {
                         if (prevWarehouseId != product.WarehouseId)
                         {
-                            _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity, product.WarehouseId,
-                                string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.ImportProduct.NewWarehouse"), prevWarehouseId));
-                            _productService.AddStockQuantityHistoryEntry(product, -prevStockQuantity, prevWarehouseId,
+                            _productService.AddStockQuantityHistoryEntry(product, -prevStockQuantity, 0, prevWarehouseId,
                                 string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.ImportProduct.OldWarehouse"), product.WarehouseId));
+                            _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity, product.StockQuantity, product.WarehouseId,
+                                string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.ImportProduct.NewWarehouse"), prevWarehouseId));                            
                         }
                         else
-                            _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity - prevStockQuantity, product.WarehouseId,
+                            _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity - prevStockQuantity, product.StockQuantity, product.WarehouseId,
                                 _localizationService.GetResource("Admin.StockQuantityHistory.Messages.ImportProduct.Edit"));
                     }
 

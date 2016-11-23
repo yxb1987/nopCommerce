@@ -10618,6 +10618,7 @@ namespace Nop.Services.Installation
                         ProductId = product.Id,
                         WarehouseId = product.WarehouseId > 0 ? (int?)product.WarehouseId : null,
                         QuantityAdjustment = product.StockQuantity,
+                        StockQuantity = product.StockQuantity,
                         Message = "Initial change by creating the product",
                         CreatedOnUtc = DateTime.UtcNow
                     });

@@ -859,7 +859,7 @@ namespace Nop.Admin.Controllers
                         _productService.UpdateProduct(product);
 
                         //quantity change history
-                        _productService.AddStockQuantityHistoryEntry(product, existingPwI.StockQuantity - prevStockQuantity, existingPwI.WarehouseId,
+                        _productService.AddStockQuantityHistoryEntry(product, existingPwI.StockQuantity - prevStockQuantity, existingPwI.StockQuantity, existingPwI.WarehouseId,
                             _localizationService.GetResource("Admin.StockQuantityHistory.Messages.Edit"));
                     }
                     else
@@ -868,7 +868,7 @@ namespace Nop.Admin.Controllers
                         _productService.DeleteProductWarehouseInventory(existingPwI);
 
                         //quantity change history
-                        _productService.AddStockQuantityHistoryEntry(product, -existingPwI.StockQuantity, existingPwI.WarehouseId,
+                        _productService.AddStockQuantityHistoryEntry(product, -existingPwI.StockQuantity, 0, existingPwI.WarehouseId,
                             _localizationService.GetResource("Admin.StockQuantityHistory.Messages.DeleteWarehouse"));
                     }
                 }
@@ -888,7 +888,7 @@ namespace Nop.Admin.Controllers
                         _productService.UpdateProduct(product);
 
                         //quantity change history
-                        _productService.AddStockQuantityHistoryEntry(product, existingPwI.StockQuantity, existingPwI.WarehouseId,
+                        _productService.AddStockQuantityHistoryEntry(product, existingPwI.StockQuantity, existingPwI.StockQuantity, existingPwI.WarehouseId,
                             _localizationService.GetResource("Admin.StockQuantityHistory.Messages.New"));
                     }
                 }
@@ -1129,11 +1129,8 @@ namespace Nop.Admin.Controllers
                 SaveProductWarehouseInventory(product, model);
 
                 //quantity change history
-                if (!product.UseMultipleWarehouses)
-                {
-                    _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity, product.WarehouseId,
-                        _localizationService.GetResource("Admin.StockQuantityHistory.Messages.New"));
-                }
+                _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity, product.StockQuantity, product.WarehouseId,
+                    _localizationService.GetResource("Admin.StockQuantityHistory.Messages.New"));
 
                 //activity log
                 _customerActivityService.InsertActivity("AddNewProduct", _localizationService.GetResource("ActivityLog.AddNewProduct"), product.Name);
@@ -1299,19 +1296,16 @@ namespace Nop.Admin.Controllers
                 }
 
                 //quantity change history
-                if (!product.UseMultipleWarehouses)
+                if (prevWarehouseId != product.WarehouseId)
                 {
-                    if (prevWarehouseId != product.WarehouseId)
-                    {
-                        _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity, product.WarehouseId,
-                            string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.NewWarehouse"), prevWarehouseId));
-                        _productService.AddStockQuantityHistoryEntry(product, -prevStockQuantity, prevWarehouseId,
-                            string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.OldWarehouse"), product.WarehouseId));
-                    }
-                    else
-                        _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity - prevStockQuantity, product.WarehouseId,
-                            _localizationService.GetResource("Admin.StockQuantityHistory.Messages.Edit"));
+                    _productService.AddStockQuantityHistoryEntry(product, -prevStockQuantity, 0, prevWarehouseId,
+                        string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.OldWarehouse"), product.WarehouseId));
+                    _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity, product.StockQuantity, product.WarehouseId,
+                        string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.NewWarehouse"), prevWarehouseId));
                 }
+                else
+                    _productService.AddStockQuantityHistoryEntry(product, product.StockQuantity - prevStockQuantity, product.StockQuantity, product.WarehouseId,
+                        _localizationService.GetResource("Admin.StockQuantityHistory.Messages.Edit"));
 
                 //activity log
                 _customerActivityService.InsertActivity("EditProduct", _localizationService.GetResource("ActivityLog.EditProduct"), product.Name);
@@ -3011,11 +3005,8 @@ namespace Nop.Admin.Controllers
                         }
 
                         //quantity change history
-                        if (!product.UseMultipleWarehouses)
-                        {
-                            _productService.AddStockQuantityHistoryEntry(product, currentStockQuantity - prevTotalStockQuantity, product.WarehouseId,
-                                _localizationService.GetResource("Admin.StockQuantityHistory.Messages.Edit"));
-                        }
+                        _productService.AddStockQuantityHistoryEntry(product, currentStockQuantity - prevTotalStockQuantity, product.StockQuantity, product.WarehouseId,
+                            _localizationService.GetResource("Admin.StockQuantityHistory.Messages.Edit"));
                     }
                 }
             }
@@ -4409,7 +4400,7 @@ namespace Nop.Admin.Controllers
             _productAttributeService.UpdateProductAttributeCombination(combination);
 
             //quantity change history
-            _productService.AddStockQuantityHistoryEntry(product, combination.StockQuantity - prevSrockQuantity, product.WarehouseId,
+            _productService.AddStockQuantityHistoryEntry(product, combination.StockQuantity - prevSrockQuantity, combination.StockQuantity, product.WarehouseId,
                 string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.CombinationEdit"), combination.Id), combination.Id);
 
             return new NullJsonResult();
@@ -4641,7 +4632,7 @@ namespace Nop.Admin.Controllers
                 _productAttributeService.InsertProductAttributeCombination(combination);
 
                 //quantity change history
-                _productService.AddStockQuantityHistoryEntry(product, combination.StockQuantity, product.WarehouseId,
+                _productService.AddStockQuantityHistoryEntry(product, combination.StockQuantity, combination.StockQuantity, product.WarehouseId,
                     string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.CombinationCreate"), combination.Id), combination.Id);
 
                 ViewBag.RefreshPage = true;
@@ -4764,6 +4755,7 @@ namespace Nop.Admin.Controllers
                     {
                         Id = historyEntry.Id,
                         QuantityAdjustment = historyEntry.QuantityAdjustment,
+                        StockQuantity = historyEntry.StockQuantity,
                         Message = historyEntry.Message,
                         CombinationId = historyEntry.CombinationId,
                         WarehouseName = warehouseName,

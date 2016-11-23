@@ -3672,6 +3672,9 @@
   <LocaleResource Name="Admin.Catalog.Products.StockQuantityHistory.Fields.Message">
     <Value>Message</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Catalog.Products.StockQuantityHistory.Fields.StockQuantity">
+    <Value>Stock quantity</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Catalog.Products.StockQuantityHistory.Fields.QuantityAdjustment">
     <Value>Quantity adjustment</Value>
   </LocaleResource>

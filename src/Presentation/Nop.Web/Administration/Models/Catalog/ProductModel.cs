@@ -968,6 +968,9 @@ namespace Nop.Admin.Models.Catalog
             [NopResourceDisplayName("Admin.Catalog.Products.StockQuantityHistory.Fields.QuantityAdjustment")]
             public int QuantityAdjustment { get; set; }
 
+            [NopResourceDisplayName("Admin.Catalog.Products.StockQuantityHistory.Fields.StockQuantity")]
+            public int StockQuantity { get; set; }
+
             [NopResourceDisplayName("Admin.Catalog.Products.StockQuantityHistory.Fields.Message")]
             [AllowHtml]
             public string Message { get; set; }

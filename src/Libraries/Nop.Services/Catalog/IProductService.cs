@@ -539,10 +539,12 @@ namespace Nop.Services.Catalog
         /// </summary>
         /// <param name="product">Product</param>
         /// <param name="quantityAdjustment">Quantity adjustment</param>
+        /// <param name="stockQuantity">Current stock quantity</param>
         /// <param name="warehouseId">Warehouse identifier</param>
         /// <param name="message">Message</param>
         /// <param name="combinationId">Product attribute combination identifier</param>
-        void AddStockQuantityHistoryEntry(Product product, int quantityAdjustment, int warehouseId = 0, string message = "", int? combinationId = null);
+        void AddStockQuantityHistoryEntry(Product product, int quantityAdjustment, int stockQuantity,
+            int warehouseId = 0, string message = "", int? combinationId = null);
 
         /// <summary>
         /// Get the history of the product stock quantity changes

@@ -833,6 +833,9 @@ set @resources='
   <LocaleResource Name="Admin.Catalog.Products.StockQuantityHistory.Fields.Message">
     <Value>Message</Value>
   </LocaleResource>
+  <LocaleResource Name="Admin.Catalog.Products.StockQuantityHistory.Fields.StockQuantity">
+    <Value>Stock quantity</Value>
+  </LocaleResource>
   <LocaleResource Name="Admin.Catalog.Products.StockQuantityHistory.Fields.QuantityAdjustment">
     <Value>Quantity adjustment</Value>
   </LocaleResource>
@@ -2537,6 +2540,7 @@ BEGIN
         [CombinationId] int NULL,
         [WarehouseId] int NULL,
 		[QuantityAdjustment] int NOT NULL,
+        [StockQuantity] int NOT NULL,
         [Message] NVARCHAR (MAX) NULL,
 		[CreatedOnUtc] datetime NOT NULL
 		PRIMARY KEY CLUSTERED 
@@ -2594,9 +2598,9 @@ BEGIN
             (CombinationId = @combinationId OR (CombinationId IS NULL AND @combinationId IS NULL)) AND (WarehouseId = @warehouseId OR (WarehouseId IS NULL AND @warehouseId IS NULL))))
 	BEGIN
 		INSERT INTO [StockQuantityHistory]
-		    ([ProductId], [CombinationId], [WarehouseId], [QuantityAdjustment], [Message], [CreatedOnUtc])
+		    ([ProductId], [CombinationId], [WarehouseId], [QuantityAdjustment], [StockQuantity], [Message], [CreatedOnUtc])
 		VALUES
-		    (@productId, @combinationId, @warehouseId, @quantity, 'Initialization of history table (original quantity set) during upgrade from a previous version', GETUTCDATE())
+		    (@productId, @combinationId, @warehouseId, @quantity, @quantity, 'Initialization of history table (original quantity set) during upgrade from a previous version', GETUTCDATE())
 	END
 
 	FETCH NEXT FROM cur_initialhistory INTO @productId, @combinationId, @warehouseId, @quantity

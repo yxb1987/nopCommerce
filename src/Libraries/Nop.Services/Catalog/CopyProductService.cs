@@ -302,11 +302,8 @@ namespace Nop.Services.Catalog
             }
 
             //quantity change history
-            if (!product.UseMultipleWarehouses)
-            {
-                _productService.AddStockQuantityHistoryEntry(productCopy, product.StockQuantity, product.WarehouseId,
-                    string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.CopyProduct"), product.Id));
-            }
+            _productService.AddStockQuantityHistoryEntry(productCopy, product.StockQuantity, product.StockQuantity, product.WarehouseId,
+                string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.CopyProduct"), product.Id));
 
             // product <-> warehouses mappings
             foreach (var pwi in product.ProductWarehouseInventory)
@@ -322,11 +319,8 @@ namespace Nop.Services.Catalog
                 productCopy.ProductWarehouseInventory.Add(pwiCopy);
 
                 //quantity change history
-                if (product.UseMultipleWarehouses)
-                {
-                    _productService.AddStockQuantityHistoryEntry(productCopy, pwi.StockQuantity, pwi.WarehouseId,
-                        string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.CopyProduct"), product.Id));
-                }
+                _productService.AddStockQuantityHistoryEntry(productCopy, pwi.StockQuantity, pwi.StockQuantity, pwi.WarehouseId,
+                    string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.CopyProduct"), product.Id));
             }
             _productService.UpdateProduct(productCopy);
 
@@ -541,7 +535,7 @@ namespace Nop.Services.Catalog
                 _productAttributeService.InsertProductAttributeCombination(combinationCopy);
 
                 //quantity change history
-                _productService.AddStockQuantityHistoryEntry(product, combination.StockQuantity, product.WarehouseId,
+                _productService.AddStockQuantityHistoryEntry(product, combination.StockQuantity, combination.StockQuantity, product.WarehouseId,
                     string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.CopyProduct.Combination"), combination.Id, product.Id), combination.Id);
             }
 

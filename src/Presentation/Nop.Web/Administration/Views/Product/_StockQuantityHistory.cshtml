@@ -87,6 +87,10 @@
                                 width: 150,
                                 template: '# if(QuantityAdjustment > 0) { # +#=QuantityAdjustment# # } else { # #=QuantityAdjustment# # } #'
                             }, {
+                                field: "StockQuantity",
+                                title: "@T("Admin.Catalog.Products.StockQuantityHistory.Fields.StockQuantity")",
+                                width: 130
+                            }, {
                                 field: "Message",
                                 title: "@T("Admin.Catalog.Products.StockQuantityHistory.Fields.Message")"
                             }, {
@@ -94,7 +98,7 @@
                                 title: "@T("Admin.Catalog.Products.StockQuantityHistory.Fields.CreatedOn")",
                                 type: "date",
                                 format: "{0:G}",
-                                width: 200
+                                width: 170
                             }
                         ]
                     });

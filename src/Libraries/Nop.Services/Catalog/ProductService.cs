@@ -1298,7 +1298,7 @@ namespace Nop.Services.Catalog
                     UpdateProduct(product);
 
                     //quantity change history
-                    AddStockQuantityHistoryEntry(product, quantityToChange, product.WarehouseId, message);
+                    AddStockQuantityHistoryEntry(product, quantityToChange, product.StockQuantity, product.WarehouseId, message);
                 }
 
                 //qty is reduced. check if minimum stock quantity is reached
@@ -1358,7 +1358,7 @@ namespace Nop.Services.Catalog
                     _productAttributeService.UpdateProductAttributeCombination(combination);
 
                     //quantity change history
-                    AddStockQuantityHistoryEntry(product, quantityToChange, product.WarehouseId,
+                    AddStockQuantityHistoryEntry(product, quantityToChange, combination.StockQuantity, product.WarehouseId,
                         string.Format("{0} {1}", string.Format(_localizationService.GetResource("Admin.StockQuantityHistory.Messages.CombinationAdjust"), combination.Id), message), combination.Id);
 
                     //send email notification
@@ -1519,7 +1519,7 @@ namespace Nop.Services.Catalog
             UpdateProduct(product);
 
             //quantity change history
-            AddStockQuantityHistoryEntry(product, quantity, warehouseId, message);
+            AddStockQuantityHistoryEntry(product, quantity, pwi.StockQuantity, warehouseId, message);
 
             //TODO add support for bundled products (AttributesXml)
         }
@@ -1562,7 +1562,7 @@ namespace Nop.Services.Catalog
             UpdateProduct(product);
 
             //quantity change history
-            AddStockQuantityHistoryEntry(product, qty, shipmentItem.WarehouseId, message);
+            AddStockQuantityHistoryEntry(product, qty, pwi.StockQuantity, shipmentItem.WarehouseId, message);
 
             //TODO add support for bundled products (AttributesXml)
 
@@ -2081,10 +2081,12 @@ namespace Nop.Services.Catalog
         /// </summary>
         /// <param name="product">Product</param>
         /// <param name="quantityAdjustment">Quantity adjustment</param>
+        /// <param name="stockQuantity">Current stock quantity</param>
         /// <param name="warehouseId">Warehouse identifier</param>
         /// <param name="message">Message</param>
         /// <param name="combinationId">Product attribute combination identifier</param>
-        public virtual void AddStockQuantityHistoryEntry(Product product, int quantityAdjustment, int warehouseId = 0, string message = "", int? combinationId = null)
+        public virtual void AddStockQuantityHistoryEntry(Product product, int quantityAdjustment, int stockQuantity,
+            int warehouseId = 0, string message = "", int? combinationId = null)
         {
             if (product == null)
                 throw new ArgumentNullException("product");
@@ -2098,6 +2100,7 @@ namespace Nop.Services.Catalog
                 CombinationId = combinationId,
                 WarehouseId = warehouseId > 0 ? (int?)warehouseId : null,
                 QuantityAdjustment = quantityAdjustment,
+                StockQuantity = stockQuantity,
                 Message = message,
                 CreatedOnUtc = DateTime.UtcNow
             };
@@ -2131,7 +2134,7 @@ namespace Nop.Services.Catalog
             if (combinationId > 0)
                 query = query.Where(historyEntry => historyEntry.CombinationId == combinationId);
 
-            query = query.OrderBy(historyEntry => historyEntry.Id);
+            query = query.OrderByDescending(historyEntry => historyEntry.CreatedOnUtc).ThenByDescending(historyEntry => historyEntry.Id);
 
             return new PagedList<StockQuantityHistory>(query, pageIndex, pageSize);
         }
