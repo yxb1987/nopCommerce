@@ -255,6 +255,8 @@ namespace Nop.Core
                 return new PickupPointTypeConverter();
             if (type == typeof(Dictionary<int, int>))
                 return new GenericDictionaryTypeConverter<int, int>();
+            if (type == typeof(Dictionary<int, decimal>))
+                return new GenericDictionaryTypeConverter<int, decimal>();
 
             return TypeDescriptor.GetConverter(type);
         }

@@ -821,6 +821,12 @@ set @resources='
   <LocaleResource Name="ReturnRequests.Title">
     <Value><![CDATA[Return item(s) from <a href="{0}">order #{1}</a>]]></Value>
   </LocaleResource>
+  <LocaleResource Name="Messages.Order.Product(s).PriceByQuantity">
+    <Value>{0} items for {1}</Value>
+  </LocaleResource>
+  <LocaleResource Name="Order.Product(s).PriceByQuantity">
+    <Value>{0} items for {1}</Value>
+  </LocaleResource>
  </Language>
 '
 
