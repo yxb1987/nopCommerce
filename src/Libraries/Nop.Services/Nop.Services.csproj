@@ -206,6 +206,7 @@
     <Compile Include="Catalog\ProductAttributeParser.cs" />
     <Compile Include="Customers\CustomerAttributeFormatter.cs" />
     <Compile Include="Customers\ICustomerAttributeFormatter.cs" />
+    <Compile Include="Discounts\DiscountPrice.cs" />
     <Compile Include="Discounts\DiscountForCaching.cs" />
     <Compile Include="ExportImport\Extensions.cs" />
     <Compile Include="Extensions.cs" />
